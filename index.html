@@ -264,20 +264,20 @@ async function runStudyBlock(block, which){
     const item = block[i];
     setBackground(item.bgType);
     showWord(item.word);
-
+  
     DATA.push({
       participant_id: PID,
       order: ORDER,
       phase: 'study',
-      trial_in_phase: which + ':' + (i+1),
+      trial_in_phase: `${which}:${i+1}`,   // keep as text consistently
       word: item.word,
       bgType: item.bgType,
-      is_target: '',        // N/A at study
-      response: '',         // N/A
-      correct: '',          // N/A
-      rt_ms: '',            // N/A
-      timestamp: nowISO()
-    });
+      is_target: null,    // N/A at study
+      response: null,     // N/A
+      correct: null,      // N/A
+      rt_ms: null         // N/A
+  // omit timestamp -> DB default
+});
 
     await sleep(STUDY_WORD_MS);
   }
@@ -308,15 +308,15 @@ async function runTest(){
       participant_id: PID,
       order: ORDER,
       phase: 'test',
-      trial_in_phase: i+1,
+      trial_in_phase: String(i+1),      // ensure text
       word: item.word,
-      bgType: item.study_bg,        // study background of OLD words; null for lures
-      is_target: item.is_target ? 1 : 0,
-      response: label,
-      correct: correct ? 1 : 0,
-      rt_ms: rt,
-      timestamp: nowISO()
-    });
+      bgType: item.study_bg,            // 'plain' | 'complex' | null
+      is_target: !!item.is_target,      // true for OLD, false for lure
+      response: label,                  // 'OLD' | 'NEW' | 'NO_RESPONSE'
+      correct: !!correct,               // true/false
+      rt_ms: (rt === '' ? null : rt)    // number or null
+  // omit timestamp -> DB default
+});
   }
 }
 

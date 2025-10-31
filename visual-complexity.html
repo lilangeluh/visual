@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visual Complexity & Word Memory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html,body { margin:0; padding:0; height:100%; background:#111; color:#eee; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+    .screen { display:none; min-height:100vh; width:100vw; display:flex; align-items:center; justify-content:center; }
+    .center { max-width: 760px; padding: 24px; line-height: 1.55; }
+    .btn { background:#2e7; color:#111; border:0; padding:12px 20px; border-radius:10px; font-weight:700; cursor:pointer; }
+    .hint { font-size:14px; opacity:.8; margin-top:12px; }
+
+
+    .trial-wrap {
+      position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center;
+      background-size:cover; background-position:center; background-repeat:no-repeat;
+    }
+    .word-chip {
+      font-weight: 800; letter-spacing:.02em;
+      font-size: clamp(36px, 8vw, 72px);
+      background: rgba(255,255,255,0.92); color:#111;
+      padding: 12px 28px; border-radius: 16px; box-shadow: none; /* no shadow */
+      user-select:none;
+    }
+    .keys {
+      position:absolute; bottom:20px; left:0; right:0;
+      text-align:center; font-size:14px; opacity:.9; display:none;
+    }
+    a.hidden-download { display:none; }
+    kbd { background:#222; border:1px solid #444; padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+
+<!-- Intro instructions -->
+<div id="instr" class="screen" style="display:flex">
+  <div class="center">
+    <h2>Word Memory Task</h2>
+    <p>In this study, you will see a series of words, one at a time, each displayed on different background patterns. 
+    Please try to <b>memorize each word</b> as it appears, since your memory for these words will be tested later.</p>
+    <p>During the study phase, simply read and remember the words. 
+    The experiment will advance automatically, so please keep your attention on the screen at all times.</p>
+    <p>After the study phase, you will take a short recognition test where you’ll decide for each word whether it is one you saw before (<b>OLD</b>) or a new one (<b>NEW</b>).</p>
+    <p class="hint">Press <kbd>Space</kbd> to begin the study phase.</p>
+  </div>
+</div>
+
+  <!-- Mid-block instructions -->
+<div id="midInstr" class="screen">
+  <div class="center">
+    <h3>Next Study Block</h3>
+    <p>You have completed the first set of words. In the next block, you will study another set of words 
+    displayed on a different background pattern. Continue to <b>memorize each word carefully</b> as they appear.</p>
+    <p class="hint">Press <kbd>Space</kbd> to continue.</p>
+  </div>
+</div>
+
+ <!-- Test instructions -->
+<div id="testInstr" class="screen">
+  <div class="center">
+    <h3>Recognition Test</h3>
+    <p>You will now see a series of words, some that you studied earlier and some that are new. 
+    For each word, decide whether it is one you have seen before (<b>OLD</b>) or one you have not (<b>NEW</b>).</p>
+    <p>Respond by pressing:</p>
+    <ul>
+      <li><b>O</b> = OLD (you remember seeing it)</li>
+      <li><b>N</b> = NEW (you did not see it before)</li>
+    </ul>
+    <p>The words will remain on screen until you respond, so please take a moment to answer carefully.</p>
+    <p class="hint">Press <kbd>Space</kbd> to begin the test phase.</p>
+  </div>
+</div>
+
+  <!-- Study/Test display -->
+  <div id="stage" class="screen">
+    <div id="stageInner" class="trial-wrap">
+      <div id="word" class="word-chip"></div>
+      <div id="keysHint" class="keys">Press <b>O</b> for <b>OLD</b> • <b>N</b> for <b>NEW</b></div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div id="done" class="screen">
+    <div class="center">
+      <h2>All done — thank you!</h2>
+      <p>Your data has been saved as a CSV download.</p>
+      <p class="hint">If the file didn’t download, <a id="manualDl" href="#" download>click here</a>.</p>
+    </div>
+  </div>
+
+  <a id="hiddenDl" class="hidden-download"></a>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- <script>
+  // 🔧 Replace with your own values from Supabase > Project Settings > API
+  const SUPABASE_URL = 'https://pafipawjgwvbwwzhfjoe.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZmlwYXdqZ3d2Ynd3emhmam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTA0MjEsImV4cCI6MjA3NzE2NjQyMX0.-bWNtXTZwVl2v14aOi_1huV72yIo_znZDOA6GaJRPTM';
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script> -->
+
+
+<script>
+/* =========================
+   CONFIG
+   ========================= */
+const IMG_PLAIN   = 'assets/plain.png';    // <- ensure these two files exist
+const IMG_COMPLEX = 'assets/complex.png';
+
+const STUDY_WORD_MS = 1500;   // show each study word
+const TEST_MAX_MS   = null;   // null = wait indefinitely for a key (no auto-skip)
+
+const KEY_OLD = 'o';
+const KEY_NEW = 'n';
+
+const KEEP_COLS = [
+  'participant_id','order','phase','trial_in_phase','word','bgType','is_target',
+  'response','correct','rt_ms','timestamp'
+];
+
+// ---- SUPABASE CONFIG ----
+const SUPABASE_URL = "https://pafipawjgwvbwwzhfjoe.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZmlwYXdqZ3d2Ynd3emhmam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTA0MjEsImV4cCI6MjA3NzE2NjQyMX0.-bWNtXTZwVl2v14aOi_1huV72yIo_znZDOA6GaJRPTM"; // from Settings > API
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+/* =========================
+   WORD LISTS (20 + 20 + 40)
+   ========================= */
+const LIST_A = [
+  'apple','bridge','candle','forest','pencil','window','garden','hammer','silver','rabbit',
+  'mirror','bucket','ocean','flower','carpet','bottle','ladder','cookie','street','train'
+];
+const LIST_B = [
+  'planet','castle','basket','tunnel','engine','blanket','butter','fence','guitar','sandwich',
+  'cupboard','shoe','paper','pillow','lantern','feather','branch','drawer','ticket','button'
+];
+const LURES = [
+  'acorn','backpack','bicycle','blender','butterfly','cactus','calendar','cereal','chalk','chimney',
+  'clover','compass','cushion','drum','envelope','eraser','fountain','goggles','helmet','honey',
+  'jacket','jungle','keyboard','kitchen','laundry','lemon','library','marble','needle',
+  'notebook','orange','paintbrush','pebble','perfume','pigeon','snowflake','pizza','popcorn','postcard'
+];
+
+/* =========================
+   UTILITIES
+   ========================= */
+const $ = sel => document.querySelector(sel);
+const show = id => {
+  for (const el of document.querySelectorAll('.screen')) el.style.display = 'none';
+  $(id).style.display = 'flex';
+};
+
+function uuid() {
+  return 'xxxx-4xxx-yxxx-xxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0, v=c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function nowISO(){ return new Date().toISOString(); }
+
+function waitForSpace() {
+  return new Promise(resolve => {
+    function handler(e){
+      if (e.code === 'Space' || e.key === ' ') {
+        window.removeEventListener('keydown', handler);
+        resolve();
+      }
+    }
+    window.addEventListener('keydown', handler);
+  });
+}
+
+/* =========================
+   STATE
+   ========================= */
+const PID   = uuid();
+const ORDER = Math.random()<0.5 ? 'AB' : 'BA';  // AB: A=plain, B=complex; BA: A=complex, B=plain
+const DATA  = []; // rows (objects)
+
+/* =========================
+   PRELOAD images
+   ========================= */
+function preloadImages(srcs){
+  return Promise.all(srcs.map(src => new Promise(res => { const img=new Image(); img.onload=()=>res(); img.onerror=()=>res(); img.src=src; })));
+}
+
+/* =========================
+   STUDY/TRIAL BUILDERS
+   ========================= */
+function buildStudyBlocks(order){
+  const a_bg = (order==='AB') ? 'plain'   : 'complex';
+  const b_bg = (order==='AB') ? 'complex' : 'plain';
+
+  const blockA = shuffle(LIST_A.map(w=>({word:w, bgType:a_bg})));
+  const blockB = shuffle(LIST_B.map(w=>({word:w, bgType:b_bg})));
+  return { blockA, blockB, a_bg, b_bg };
+}
+
+function buildTestPool(order){
+  const map = new Map();
+  if(order==='AB'){ LIST_A.forEach(w=>map.set(w,'plain')); LIST_B.forEach(w=>map.set(w,'complex')); }
+  else            { LIST_A.forEach(w=>map.set(w,'complex')); LIST_B.forEach(w=>map.set(w,'plain'));  }
+
+  const olds = [...LIST_A, ...LIST_B].map(w => ({ word:w, is_target:true,  study_bg: map.get(w) }));
+  const news = LURES.map(w => ({ word:w, is_target:false, study_bg:null }));
+  return shuffle([...olds, ...news]);
+}
+
+/* =========================
+   FLOW
+   ========================= */
+async function run(){
+  // --- Intro screen ---
+  show('#instr');
+  await waitForSpace();
+
+  // preload backgrounds
+  await preloadImages([IMG_PLAIN, IMG_COMPLEX]);
+
+  // STUDY BLOCK A
+  show('#stage');
+  const study = buildStudyBlocks(ORDER);
+  await runStudyBlock(study.blockA, 'A');
+
+  // MID INSTRUCTION between blocks
+  
+  show('#midInstr');
+  await waitForSpace();
+
+  // STUDY BLOCK B
+  show('#stage');
+  await runStudyBlock(study.blockB, 'B');
+
+  // TEST INSTRUCTIONS
+  show('#testInstr');
+  await waitForSpace();
+
+  // TEST
+  await runTest();
+
+  // DONE
+  finishAndDownload();
+}
+
+function setBackground(type){
+  const url = (type==='complex') ? IMG_COMPLEX : IMG_PLAIN;
+  $('#stageInner').style.backgroundImage = `url("${url}")`;
+}
+
+function showWord(w){
+  $('#word').textContent = w;
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+async function runStudyBlock(block, which){
+  // hide test keys hint during study
+  $('#keysHint').style.display = 'none';
+
+  for(let i=0;i<block.length;i++){
+    const item = block[i];
+    setBackground(item.bgType);
+    showWord(item.word);
+
+    DATA.push({
+      participant_id: PID,
+      order: ORDER,
+      phase: 'study',
+      trial_in_phase: which + ':' + (i+1),
+      word: item.word,
+      bgType: item.bgType,
+      is_target: '',        // N/A at study
+      response: '',         // N/A
+      correct: '',          // N/A
+      rt_ms: '',            // N/A
+      timestamp: nowISO()
+    });
+
+    await sleep(STUDY_WORD_MS);
+  }
+}
+
+async function runTest(){
+  // neutral background and show keys hint
+  setBackground('plain');
+  $('#keysHint').style.display = 'block';
+
+  const pool = buildTestPool(ORDER);
+  show('#stage');
+
+  for(let i=0;i<pool.length;i++){
+    const item = pool[i];
+    showWord(item.word);
+
+    const rtStart = performance.now();
+
+    const response = await waitForKey([KEY_OLD, KEY_NEW], TEST_MAX_MS);
+    const rt = response ? Math.round(performance.now() - rtStart) : '';
+
+    const saidOld = (response && response.toLowerCase()===KEY_OLD);
+    const label   = response ? (saidOld ? 'OLD' : 'NEW') : 'NO_RESPONSE';
+    const correct = response ? ((item.is_target && saidOld) || (!item.is_target && !saidOld)) : false;
+
+    DATA.push({
+      participant_id: PID,
+      order: ORDER,
+      phase: 'test',
+      trial_in_phase: i+1,
+      word: item.word,
+      bgType: item.study_bg,        // study background of OLD words; null for lures
+      is_target: item.is_target ? 1 : 0,
+      response: label,
+      correct: correct ? 1 : 0,
+      rt_ms: rt,
+      timestamp: nowISO()
+    });
+  }
+}
+
+function waitForKey(allowedKeys, timeoutMs = null){
+  return new Promise(resolve=>{
+    let done=false;
+
+    function handler(e){
+      const k=(e.key||'').toLowerCase();
+      if(allowedKeys.includes(k)){
+        done=true;
+        window.removeEventListener('keydown', handler);
+        if(timeoutId) clearTimeout(timeoutId);
+        resolve(k);
+      }
+    }
+    window.addEventListener('keydown', handler);
+
+    let timeoutId=null;
+    if (typeof timeoutMs === 'number' && isFinite(timeoutMs) && timeoutMs > 0){
+      timeoutId = setTimeout(()=>{
+        if(!done){
+          window.removeEventListener('keydown', handler);
+          resolve(null);
+        }
+      }, timeoutMs);
+    }
+  });
+}
+
+function toCSV(rows){
+  const header = KEEP_COLS.join(',');
+  const esc = v => {
+    if(v===null || v===undefined) return '';
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const body = rows.map(r => KEEP_COLS.map(k => esc(r[k])).join(',')).join('\n');
+  return header + '\n' + body;
+}
+
+
+async function uploadToSupabase(rows) {
+  try {
+    const { data, error } = await supabase
+      .from("vc_trials") // 🔹 your table name
+      
+      .insert(rows);
+
+    if (error) {
+      console.error("❌ Supabase upload error:", error.message);
+    } else {
+      console.log(`✅ Uploaded ${rows.length} rows to Supabase`);
+    }
+  } catch (err) {
+    console.error("❌ Network/upload failed:", err);
+  }
+}
+
+// =========================
+// Final save + upload
+// =========================
+async function finishAndDownload() {
+  show("#done");
+
+  // 1️⃣ Upload to Supabase
+  await uploadToSupabase(DATA);
+
+  // 2️⃣ Local CSV backup download
+  const csv = toCSV(DATA);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.getElementById("hiddenDl");
+  a.href = url;
+  a.download = `visual_complexity_${PID}.csv`;
+  a.click();
+
+  const manual = document.getElementById("manualDl");
+  manual.href = url;
+  manual.download = `visual_complexity_${PID}.csv`;
+
+  console.log("✅ Data uploaded to Supabase and saved locally.");
+}
+
+// function finishAndDownload(){
+//   show('#done');
+//   const csv = toCSV(DATA);
+//   const blob = new Blob([csv], { type:'text/csv' });
+//   const url  = URL.createObjectURL(blob);
+
+//   const a = document.getElementById('hiddenDl');
+//   a.href = url;
+//   a.download = `visual_complexity_${PID}.csv`;
+//   a.click();
+
+//   const manual = document.getElementById('manualDl');
+//   manual.href = url;
+//   manual.download = `visual_complexity_${PID}.csv`;
+// }
+
+/* =========================
+   START FLOW
+   ========================= */
+run();
+
+// If you prefer a button on the first screen, comment out the line above and use this:
+// document.addEventListener('keydown', (e)=>{ if(document.getElementById('instr').style.display==='flex' && (e.code==='Space' || e.key===' ')) run(); }, { once:true });
+</script>
+</body>
+</html>

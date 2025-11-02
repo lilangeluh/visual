@@ -8,9 +8,8 @@
     html,body { margin:0; padding:0; height:100%; background:#111; color:#eee; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
     .screen { display:none; min-height:100vh; width:100vw; display:flex; align-items:center; justify-content:center; }
     .center { max-width: 760px; padding: 24px; line-height: 1.55; }
-    .btn { background:#2e7; color:#111; border:0; padding:12px 20px; border-radius:10px; font-weight:700; cursor:pointer; }
-    .hint { font-size:14px; opacity:.8; margin-top:12px; }
-
+    .hint { font-size:14px; opacity:.85; margin-top:12px; }
+    kbd { background:#222; border:1px solid #444; padding:2px 6px; border-radius:6px; }
 
     .trial-wrap {
       position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center;
@@ -20,7 +19,7 @@
       font-weight: 800; letter-spacing:.02em;
       font-size: clamp(36px, 8vw, 72px);
       background: rgba(255,255,255,0.92); color:#111;
-      padding: 12px 28px; border-radius: 16px; box-shadow: none; /* no shadow */
+      padding: 12px 28px; border-radius: 16px; box-shadow: none;
       user-select:none;
     }
     .keys {
@@ -28,129 +27,169 @@
       text-align:center; font-size:14px; opacity:.9; display:none;
     }
     a.hidden-download { display:none; }
-    kbd { background:#222; border:1px solid #444; padding:2px 6px; border-radius:6px; }
+
+    /* Simple list style for instruction bullets */
+    ul { margin-left: 1.2rem; }
   </style>
 </head>
 <body>
 
-<!-- Intro instructions -->
-<div id="instr" class="screen" style="display:flex">
+<!-- Intro (global) -->
+<div id="intro" class="screen" style="display:flex">
   <div class="center">
     <h2>Word Memory Task</h2>
-    <p>In this study, you will see a series of words, one at a time, each displayed on different background patterns. 
-    Please try to <b>memorize each word</b> as it appears, since your memory for these words will be tested later.</p>
-    <p>During the study phase, simply read and remember the words. 
-    The experiment will advance automatically, so please keep your attention on the screen at all times.</p>
-    <p>After the study phase, you will take a short recognition test where you’ll decide for each word whether it is one you saw before (<b>OLD</b>) or a new one (<b>NEW</b>).</p>
-    <p class="hint">Press <kbd>Space</kbd> to begin the study phase.</p>
+    <p>You’ll do a short <b>practice</b> (study → test) and then the <b>main task</b>.</p>
+    <ul>
+      <li><b>Study:</b> words appear one at a time. Just <b>memorize</b> them.</li>
+      <li><b>Test:</b> decide if each word is one you studied (<b>OLD</b>) or not (<b>NEW</b>).</li>
+    </ul>
+    <p class="hint">Press <kbd>Space</kbd> to begin practice.</p>
   </div>
 </div>
 
-  <!-- Mid-block instructions -->
-<div id="midInstr" class="screen">
+<!-- Practice study → mid → test -->
+<div id="practiceStudyStart" class="screen">
   <div class="center">
-    <h3>Next Study Block</h3>
-    <p>You have completed the first set of words. In the next block, you will study another set of words 
-    displayed on a different background pattern. Continue to <b>memorize each word carefully</b> as they appear.</p>
+    <h3>Practice — Study</h3>
+    <p>Memorize each word. The screen advances automatically.</p>
+    <p class="hint">Press <kbd>Space</kbd> to start practice study.</p>
+  </div>
+</div>
+
+<div id="practiceMid" class="screen">
+  <div class="center">
+    <h3>Practice — Next Block</h3>
+    <p>Another short set of words follows. Keep memorizing.</p>
     <p class="hint">Press <kbd>Space</kbd> to continue.</p>
   </div>
 </div>
 
- <!-- Test instructions -->
-<div id="testInstr" class="screen">
+<div id="practiceTestInstr" class="screen">
   <div class="center">
-    <h3>Recognition Test</h3>
-    <p>You will now see a series of words, some that you studied earlier and some that are new. 
-    For each word, decide whether it is one you have seen before (<b>OLD</b>) or one you have not (<b>NEW</b>).</p>
-    <p>Respond by pressing:</p>
+    <h3>Practice — Test</h3>
+    <p>For each word, respond:</p>
     <ul>
-      <li><b>O</b> = OLD (you remember seeing it)</li>
-      <li><b>N</b> = NEW (you did not see it before)</li>
+      <li><b><kbd>O</kbd> = OLD</b></li>
+      <li><b><kbd>N</kbd> = NEW</b></li>
     </ul>
-    <p>The words will remain on screen until you respond, so please take a moment to answer carefully.</p>
-    <p class="hint">Press <kbd>Space</kbd> to begin the test phase.</p>
+    <p class="hint">Press <kbd>Space</kbd> to begin the practice test.</p>
   </div>
 </div>
 
-  <!-- Study/Test display -->
-  <div id="stage" class="screen">
-    <div id="stageInner" class="trial-wrap">
-      <div id="word" class="word-chip"></div>
-      <div id="keysHint" class="keys">Press <b>O</b> for <b>OLD</b> • <b>N</b> for <b>NEW</b></div>
-    </div>
+<!-- Main study → mid → test instructions -->
+<div id="mainStudyStart" class="screen">
+  <div class="center">
+    <h3>Main Task — Study</h3>
+    <p>Memorize each word. The screen advances automatically.</p>
+    <p class="hint">Press <kbd>Space</kbd> to start the main study.</p>
   </div>
+</div>
 
-  <!-- Done -->
-  <div id="done" class="screen">
-    <div class="center">
-      <h2>All done — thank you!</h2>
-      <p>Your data has been saved as a CSV download.</p>
-      <p class="hint">If the file didn’t download, <a id="manualDl" href="#" download>click here</a>.</p>
-    </div>
+<div id="mainMid" class="screen">
+  <div class="center">
+    <h3>Next Study Block</h3>
+    <p>Another set of words follows. Keep memorizing.</p>
+    <p class="hint">Press <kbd>Space</kbd> to continue.</p>
   </div>
+</div>
 
-  <a id="hiddenDl" class="hidden-download"></a>
+<div id="mainTestInstr" class="screen">
+  <div class="center">
+    <h3>Main Task — Test</h3>
+    <p>For each word, decide if it’s one you studied.</p>
+    <ul>
+      <li><b><kbd>O</kbd> = OLD</b></li>
+      <li><b><kbd>N</kbd> = NEW</b></li>
+    </ul>
+    <p class="hint">Press <kbd>Space</kbd> to begin the main test.</p>
+  </div>
+</div>
 
+<!-- Stage (shared display) -->
+<div id="stage" class="screen">
+  <div id="stageInner" class="trial-wrap">
+    <div id="word" class="word-chip"></div>
+    <div id="keysHint" class="keys">Press <b>O</b> for <b>OLD</b> • <b>N</b> for <b>NEW</b></div>
+  </div>
+</div>
+
+<!-- Done -->
+<div id="done" class="screen">
+  <div class="center">
+    <h2>All done — thank you!</h2>
+    <p>Your data has been saved as a CSV download.</p>
+    <p class="hint">If the file didn’t download, <a id="manualDl" href="#" download>click here</a>.</p>
+  </div>
+</div>
+<a id="hiddenDl" class="hidden-download"></a>
+
+<!-- Supabase client -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<!-- <script>
-  // 🔧 Replace with your own values from Supabase > Project Settings > API
-  const SUPABASE_URL = 'https://pafipawjgwvbwwzhfjoe.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZmlwYXdqZ3d2Ynd3emhmam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTA0MjEsImV4cCI6MjA3NzE2NjQyMX0.-bWNtXTZwVl2v14aOi_1huV72yIo_znZDOA6GaJRPTM';
-
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script> -->
-
 
 <script>
 /* =========================
    CONFIG
    ========================= */
-const IMG_PLAIN   = 'assets/plain.png';    // <- ensure these two files exist
+const IMG_PLAIN   = 'assets/plain.png';    // ensure these exist
 const IMG_COMPLEX = 'assets/complex.png';
 
-const STUDY_WORD_MS = 1500;   // show each study word
-const TEST_MAX_MS   = null;   // null = wait indefinitely for a key (no auto-skip)
+// Timing
+const STUDY_WORD_MS = 1750;  // study exposure
+const TEST_MAX_MS   = null;  // wait indefinitely for a response (no auto-skip)
 
+// Keys
 const KEY_OLD = 'o';
 const KEY_NEW = 'n';
 
+// Data columns (CSV order)
 const KEEP_COLS = [
   'participant_id','order','phase','trial_in_phase','word','bgType','is_target',
   'response','correct','rt_ms','timestamp'
 ];
 
 // ---- SUPABASE CONFIG ----
+// (Use your own values; you already have these)
 const SUPABASE_URL = "https://pafipawjgwvbwwzhfjoe.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZmlwYXdqZ3d2Ynd3emhmam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTA0MjEsImV4cCI6MjA3NzE2NjQyMX0.-bWNtXTZwVl2v14aOi_1huV72yIo_znZDOA6GaJRPTM"; // from Settings > API
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZmlwYXdqZ3d2Ynd3emhmam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTA0MjEsImV4cCI6MjA3NzE2NjQyMX0.-bWNtXTZwVl2v14aOi_1huV72yIo_znZDOA6GaJRPTM";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/* =========================
+   MASTER WORD LISTS (original 20/20/40)
+   ========================= */
+// A (15) — all 6 letters
+const MASTER_A = [
+  'rabbit','window','garden','silver','ladder',
+  'bottle','cookie','forest','pencil','mirror',
+  'orange','tunnel','market','branch','drawer'
+];
+// B (15) — all 6 letters
+const MASTER_B = [
+  'planet','castle','basket','engine','guitar',
+  'pillow','button','pocket','string','camera',
+  'circle','carpet','spring','office','school'
+];
+// Lures (30) — all 6 letters, no overlap with A/B
+const MASTER_LURES = [
+  'butter','cheese','tomato','pepper','banana',
+  'ticket','bridge','flight','rocket','helmet',
+  'jungle','marble','needle','wallet','marker',
+  'stream','flower','animal','fabric','powder',
+  'desert','island','shovel','bucket','bakery',
+  'statue','anchor','candle','letter','coffee'
+];
 
 /* =========================
-   WORD LISTS (20 + 20 + 40)
+   PRACTICE WORDS (short, distinct from main)
    ========================= */
-const LIST_A = [
-  'apple','bridge','candle','forest','pencil','window','garden','hammer','silver','rabbit',
-  'mirror','bucket','ocean','flower','carpet','bottle','ladder','cookie','street','train'
-];
-const LIST_B = [
-  'planet','castle','basket','tunnel','engine','blanket','butter','fence','guitar','sandwich',
-  'cupboard','shoe','paper','pillow','lantern','feather','branch','drawer','ticket','button'
-];
-const LURES = [
-  'acorn','backpack','bicycle','blender','butterfly','cactus','calendar','cereal','chalk','chimney',
-  'clover','compass','cushion','drum','envelope','eraser','fountain','goggles','helmet','honey',
-  'jacket','jungle','keyboard','kitchen','laundry','lemon','library','marble','needle',
-  'notebook','orange','paintbrush','pebble','perfume','pigeon','snowflake','pizza','popcorn','postcard'
-];
+const PRACTICE_A = ['maple','shelf'];
+const PRACTICE_B = ['coin','river'];
+const PRACTICE_LURES = ['torch','sketch']; // 2 lures for practice test
 
 /* =========================
    UTILITIES
    ========================= */
 const $ = sel => document.querySelector(sel);
-const show = id => {
-  for (const el of document.querySelectorAll('.screen')) el.style.display = 'none';
-  $(id).style.display = 'flex';
-};
+const show = id => { for (const el of document.querySelectorAll('.screen')) el.style.display = 'none'; $(id).style.display = 'flex'; };
 
 function uuid() {
   return 'xxxx-4xxx-yxxx-xxxx'.replace(/[xy]/g,c=>{
@@ -159,6 +198,7 @@ function uuid() {
   });
 }
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function sampleDown(arr, n){ const copy=[...arr]; shuffle(copy); return copy.slice(0, n); }
 function nowISO(){ return new Date().toISOString(); }
 
 function waitForSpace() {
@@ -172,131 +212,97 @@ function waitForSpace() {
     window.addEventListener('keydown', handler);
   });
 }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
 /* =========================
    STATE
    ========================= */
 const PID   = uuid();
 const ORDER = Math.random()<0.5 ? 'AB' : 'BA';  // AB: A=plain, B=complex; BA: A=complex, B=plain
-const DATA  = []; // rows (objects)
+const DATA  = []; // rows for main experiment only
+
+// Main lists auto-downsize to 15/15/30 at runtime:
+const LIST_A = sampleDown(MASTER_A, 15);
+const LIST_B = sampleDown(MASTER_B, 15);
+const LURES  = sampleDown(MASTER_LURES, 30);
 
 /* =========================
-   PRELOAD images
+   PRELOAD IMAGES
    ========================= */
 function preloadImages(srcs){
   return Promise.all(srcs.map(src => new Promise(res => { const img=new Image(); img.onload=()=>res(); img.onerror=()=>res(); img.src=src; })));
 }
 
 /* =========================
-   STUDY/TRIAL BUILDERS
+   BUILDERS
    ========================= */
-function buildStudyBlocks(order){
+function buildStudyBlocks(order, listA, listB){
   const a_bg = (order==='AB') ? 'plain'   : 'complex';
   const b_bg = (order==='AB') ? 'complex' : 'plain';
-
-  const blockA = shuffle(LIST_A.map(w=>({word:w, bgType:a_bg})));
-  const blockB = shuffle(LIST_B.map(w=>({word:w, bgType:b_bg})));
-  return { blockA, blockB, a_bg, b_bg };
+  const blockA = shuffle(listA.map(w=>({word:w, bgType:a_bg})));
+  const blockB = shuffle(listB.map(w=>({word:w, bgType:b_bg})));
+  return { blockA, blockB };
 }
 
-function buildTestPool(order){
+function buildTestPool(order, listA, listB, lures){
   const map = new Map();
-  if(order==='AB'){ LIST_A.forEach(w=>map.set(w,'plain')); LIST_B.forEach(w=>map.set(w,'complex')); }
-  else            { LIST_A.forEach(w=>map.set(w,'complex')); LIST_B.forEach(w=>map.set(w,'plain'));  }
-
-  const olds = [...LIST_A, ...LIST_B].map(w => ({ word:w, is_target:true,  study_bg: map.get(w) }));
-  const news = LURES.map(w => ({ word:w, is_target:false, study_bg:null }));
+  if(order==='AB'){ listA.forEach(w=>map.set(w,'plain')); listB.forEach(w=>map.set(w,'complex')); }
+  else            { listA.forEach(w=>map.set(w,'complex')); listB.forEach(w=>map.set(w,'plain'));  }
+  const olds = [...listA, ...listB].map(w => ({ word:w, is_target:true,  study_bg: map.get(w) }));
+  const news = lures.map(w => ({ word:w, is_target:false, study_bg:null }));
   return shuffle([...olds, ...news]);
 }
 
 /* =========================
-   FLOW
+   RENDER HELPERS
    ========================= */
-async function run(){
-  // --- Intro screen ---
-  show('#instr');
-  await waitForSpace();
-
-  // preload backgrounds
-  await preloadImages([IMG_PLAIN, IMG_COMPLEX]);
-
-  // STUDY BLOCK A
-  show('#stage');
-  const study = buildStudyBlocks(ORDER);
-  await runStudyBlock(study.blockA, 'A');
-
-  // MID INSTRUCTION between blocks
-  
-  show('#midInstr');
-  await waitForSpace();
-
-  // STUDY BLOCK B
-  show('#stage');
-  await runStudyBlock(study.blockB, 'B');
-
-  // TEST INSTRUCTIONS
-  show('#testInstr');
-  await waitForSpace();
-
-  // TEST
-  await runTest();
-
-  // DONE
-  finishAndDownload();
-}
-
 function setBackground(type){
   const url = (type==='complex') ? IMG_COMPLEX : IMG_PLAIN;
   $('#stageInner').style.backgroundImage = `url("${url}")`;
 }
+function showWord(w){ $('#word').textContent = w; }
+function showKeysHint(flag){ $('#keysHint').style.display = flag ? 'block' : 'none'; }
 
-function showWord(w){
-  $('#word').textContent = w;
-}
-
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-async function runStudyBlock(block, which){
-  // hide test keys hint during study
-  $('#keysHint').style.display = 'none';
-
+/* =========================
+   CORE RUNNERS
+   ========================= */
+async function runStudyBlock(block, whichLabel, record){
+  show('#stage');
+  showKeysHint(false);
   for(let i=0;i<block.length;i++){
     const item = block[i];
     setBackground(item.bgType);
     showWord(item.word);
-  
-    DATA.push({
-      participant_id: PID,
-      order: ORDER,
-      phase: 'study',
-      trial_in_phase: `${which}:${i+1}`,   // keep as text consistently
-      word: item.word,
-      bgType: item.bgType,
-      is_target: null,    // N/A at study
-      response: null,     // N/A
-      correct: null,      // N/A
-      rt_ms: null         // N/A
-  // omit timestamp -> DB default
-});
 
+    if (record){
+      DATA.push({
+        participant_id: PID,
+        order: ORDER,
+        phase: 'study',
+        trial_in_phase: `${whichLabel}:${i+1}`,
+        word: item.word,
+        bgType: item.bgType,
+        is_target: null,
+        response: null,
+        correct: null,
+        rt_ms: null,
+        timestamp: nowISO()
+      });
+    }
     await sleep(STUDY_WORD_MS);
   }
 }
 
-async function runTest(){
-  // neutral background and show keys hint
-  setBackground('plain');
-  $('#keysHint').style.display = 'block';
-
-  const pool = buildTestPool(ORDER);
+async function runTest(testPool, record){
+  setBackground('plain');     // neutral during test
   show('#stage');
+  showKeysHint(true);
 
-  for(let i=0;i<pool.length;i++){
-    const item = pool[i];
+  for(let i=0;i<testPool.length;i++){
+    const item = testPool[i];
     showWord(item.word);
 
     const rtStart = performance.now();
-
     const response = await waitForKey([KEY_OLD, KEY_NEW], TEST_MAX_MS);
     const rt = response ? Math.round(performance.now() - rtStart) : '';
 
@@ -304,26 +310,27 @@ async function runTest(){
     const label   = response ? (saidOld ? 'OLD' : 'NEW') : 'NO_RESPONSE';
     const correct = response ? ((item.is_target && saidOld) || (!item.is_target && !saidOld)) : false;
 
-    DATA.push({
-      participant_id: PID,
-      order: ORDER,
-      phase: 'test',
-      trial_in_phase: String(i+1),      // ensure text
-      word: item.word,
-      bgType: item.study_bg,            // 'plain' | 'complex' | null
-      is_target: !!item.is_target,      // true for OLD, false for lure
-      response: label,                  // 'OLD' | 'NEW' | 'NO_RESPONSE'
-      correct: !!correct,               // true/false
-      rt_ms: (rt === '' ? null : rt)    // number or null
-  // omit timestamp -> DB default
-});
+    if (record){
+      DATA.push({
+        participant_id: PID,
+        order: ORDER,
+        phase: 'test',
+        trial_in_phase: String(i+1),
+        word: item.word,
+        bgType: item.study_bg,     // 'plain' | 'complex' | null
+        is_target: !!item.is_target,
+        response: label,
+        correct: !!correct,
+        rt_ms: (rt === '' ? null : rt),
+        timestamp: nowISO()
+      });
+    }
   }
 }
 
 function waitForKey(allowedKeys, timeoutMs = null){
   return new Promise(resolve=>{
     let done=false;
-
     function handler(e){
       const k=(e.key||'').toLowerCase();
       if(allowedKeys.includes(k)){
@@ -347,6 +354,9 @@ function waitForKey(allowedKeys, timeoutMs = null){
   });
 }
 
+/* =========================
+   EXPORT & UPLOAD
+   ========================= */
 function toCSV(rows){
   const header = KEEP_COLS.join(',');
   const esc = v => {
@@ -358,34 +368,22 @@ function toCSV(rows){
   return header + '\n' + body;
 }
 
-
 async function uploadToSupabase(rows) {
   try {
     const { data, error } = await supabase
-      .from("vc_trials") // 🔹 your table name
-      
+      .from("vc_trials")
       .insert(rows);
-
-    if (error) {
-      console.error("❌ Supabase upload error:", error.message);
-    } else {
-      console.log(`✅ Uploaded ${rows.length} rows to Supabase`);
-    }
+    if (error) console.error("❌ Supabase upload error:", error.message);
+    else console.log(`✅ Uploaded ${rows.length} rows to Supabase`);
   } catch (err) {
     console.error("❌ Network/upload failed:", err);
   }
 }
 
-// =========================
-// Final save + upload
-// =========================
 async function finishAndDownload() {
   show("#done");
-
-  // 1️⃣ Upload to Supabase
   await uploadToSupabase(DATA);
 
-  // 2️⃣ Local CSV backup download
   const csv = toCSV(DATA);
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
@@ -402,29 +400,49 @@ async function finishAndDownload() {
   console.log("✅ Data uploaded to Supabase and saved locally.");
 }
 
-// function finishAndDownload(){
-//   show('#done');
-//   const csv = toCSV(DATA);
-//   const blob = new Blob([csv], { type:'text/csv' });
-//   const url  = URL.createObjectURL(blob);
+/* =========================
+   FLOW
+   ========================= */
+async function runAll(){
+  // Intro → Practice Study A
+  show('#intro'); await waitForSpace();
+  await preloadImages([IMG_PLAIN, IMG_COMPLEX]);
 
-//   const a = document.getElementById('hiddenDl');
-//   a.href = url;
-//   a.download = `visual_complexity_${PID}.csv`;
-//   a.click();
+  // PRACTICE (short; NOT recorded)
+  show('#practiceStudyStart'); await waitForSpace();
+  {
+    const practiceOrder = ORDER; // mirror main order so the flow feels consistent
+    const { blockA, blockB } = buildStudyBlocks(practiceOrder, PRACTICE_A, PRACTICE_B);
+    await runStudyBlock(blockA, 'P-A', false);
+    show('#practiceMid'); await waitForSpace();
+    await runStudyBlock(blockB, 'P-B', false);
 
-//   const manual = document.getElementById('manualDl');
-//   manual.href = url;
-//   manual.download = `visual_complexity_${PID}.csv`;
-// }
+    show('#practiceTestInstr'); await waitForSpace();
+    const pPool = buildTestPool(practiceOrder, PRACTICE_A, PRACTICE_B, PRACTICE_LURES);
+    await runTest(pPool, false);
+  }
+
+  // MAIN — Study A + B
+  show('#mainStudyStart'); await waitForSpace();
+  {
+    const { blockA, blockB } = buildStudyBlocks(ORDER, LIST_A, LIST_B);
+    await runStudyBlock(blockA, 'A', true);
+    show('#mainMid'); await waitForSpace();
+    await runStudyBlock(blockB, 'B', true);
+
+    show('#mainTestInstr'); await waitForSpace();
+    const testPool = buildTestPool(ORDER, LIST_A, LIST_B, LURES);
+    await runTest(testPool, true);
+  }
+
+  // DONE
+  await finishAndDownload();
+}
 
 /* =========================
-   START FLOW
+   START
    ========================= */
-run();
-
-// If you prefer a button on the first screen, comment out the line above and use this:
-// document.addEventListener('keydown', (e)=>{ if(document.getElementById('instr').style.display==='flex' && (e.code==='Space' || e.key===' ')) run(); }, { once:true });
+runAll();
 </script>
 </body>
 </html>

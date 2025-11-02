@@ -43,7 +43,16 @@
       <li><b>Study:</b> words appear one at a time. Just <b>memorize</b> them.</li>
       <li><b>Test:</b> decide if each word is one you studied (<b>OLD</b>) or not (<b>NEW</b>).</li>
     </ul>
-    <p class="hint">Press <kbd>Space</kbd> to begin practice.</p>
+    <p class="hint">Press <kbd>Space</kbd> to continue.</p>
+  </div>
+</div>
+
+<!-- Fullscreen prompt -->
+<div id="fullscreenPrompt" class="screen">
+  <div class="center">
+    <h3>Before we begin</h3>
+    <p>Please switch to fullscreen so nothing on your device covers the task.</p>
+    <p class="hint">Press <kbd>Space</kbd> to enter fullscreen.</p>
   </div>
 </div>
 
@@ -148,27 +157,26 @@ const KEEP_COLS = [
 ];
 
 // ---- SUPABASE CONFIG ----
-// (Use your own values; you already have these)
 const SUPABASE_URL = "https://pafipawjgwvbwwzhfjoe.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZmlwYXdqZ3d2Ynd3emhmam9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTA0MjEsImV4cCI6MjA3NzE2NjQyMX0.-bWNtXTZwVl2v14aOi_1huV72yIo_znZDOA6GaJRPTM";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* =========================
-   MASTER WORD LISTS (original 20/20/40)
+   MASTER WORD LISTS (original 20/20/40 trimmed to 15/15/30 at runtime)
    ========================= */
-// A (15) — all 6 letters
+/* A (15) — six letters */
 const MASTER_A = [
   'rabbit','window','garden','silver','ladder',
   'bottle','cookie','forest','pencil','mirror',
   'orange','tunnel','market','branch','drawer'
 ];
-// B (15) — all 6 letters
+/* B (15) — six letters */
 const MASTER_B = [
   'planet','castle','basket','engine','guitar',
   'pillow','button','pocket','string','camera',
   'circle','carpet','spring','office','school'
 ];
-// Lures (30) — all 6 letters, no overlap with A/B
+/* Lures (30) — six letters, no overlap with A/B */
 const MASTER_LURES = [
   'butter','cheese','tomato','pepper','banana',
   'ticket','bridge','flight','rocket','helmet',
@@ -183,7 +191,7 @@ const MASTER_LURES = [
    ========================= */
 const PRACTICE_A = ['maple','shelf'];
 const PRACTICE_B = ['coin','river'];
-const PRACTICE_LURES = ['torch','sketch']; // 2 lures for practice test
+const PRACTICE_LURES = ['torch','sketch'];
 
 /* =========================
    UTILITIES
@@ -384,6 +392,11 @@ async function finishAndDownload() {
   show("#done");
   await uploadToSupabase(DATA);
 
+  // exit fullscreen politely
+  if (document.fullscreenElement) {
+    try { await document.exitFullscreen(); } catch(e) {}
+  }
+
   const csv = toCSV(DATA);
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
@@ -404,14 +417,24 @@ async function finishAndDownload() {
    FLOW
    ========================= */
 async function runAll(){
-  // Intro → Practice Study A
-  show('#intro'); await waitForSpace();
+  // Intro
+  show('#intro'); 
+  await waitForSpace();
+
+  // Fullscreen
+  show('#fullscreenPrompt');
+  await waitForSpace();
+  if (document.documentElement.requestFullscreen) {
+    try { await document.documentElement.requestFullscreen(); } catch(e) {}
+  }
+
   await preloadImages([IMG_PLAIN, IMG_COMPLEX]);
 
   // PRACTICE (short; NOT recorded)
-  show('#practiceStudyStart'); await waitForSpace();
+  show('#practiceStudyStart'); 
+  await waitForSpace();
   {
-    const practiceOrder = ORDER; // mirror main order so the flow feels consistent
+    const practiceOrder = ORDER; // mirror main order
     const { blockA, blockB } = buildStudyBlocks(practiceOrder, PRACTICE_A, PRACTICE_B);
     await runStudyBlock(blockA, 'P-A', false);
     show('#practiceMid'); await waitForSpace();
@@ -423,7 +446,8 @@ async function runAll(){
   }
 
   // MAIN — Study A + B
-  show('#mainStudyStart'); await waitForSpace();
+  show('#mainStudyStart'); 
+  await waitForSpace();
   {
     const { blockA, blockB } = buildStudyBlocks(ORDER, LIST_A, LIST_B);
     await runStudyBlock(blockA, 'A', true);

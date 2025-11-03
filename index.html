@@ -246,7 +246,7 @@ function preloadImages(srcs){
    ========================= */
 function buildStudyBlocks(order, listA, listB){
   const a_bg = (order==='AB') ? 'plain'   : 'complex';
-  const b_bg = (order==='AB') ? 'complex' : 'plain';
+  const b_bg = (order==='BA') ? 'complex' : 'plain';
   const blockA = shuffle(listA.map(w=>({word:w, bgType:a_bg})));
   const blockB = shuffle(listB.map(w=>({word:w, bgType:b_bg})));
   return { blockA, blockB };

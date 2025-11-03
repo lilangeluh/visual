@@ -162,7 +162,8 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* =========================
-   MASTER WORD LISTS (original 20/20/40 trimmed to 15/15/30 at runtime)
+   MASTER WORD LISTS
+   (we still sample down to 15/15/30 at runtime)
    ========================= */
 /* A (15) — six letters */
 const MASTER_A = [
@@ -238,15 +239,22 @@ const LURES  = sampleDown(MASTER_LURES, 30);
    PRELOAD IMAGES
    ========================= */
 function preloadImages(srcs){
-  return Promise.all(srcs.map(src => new Promise(res => { const img=new Image(); img.onload=()=>res(); img.onerror=()=>res(); img.src=src; })));
+  return Promise.all(srcs.map(src => new Promise(res => {
+    const img=new Image();
+    img.onload=()=>res();
+    img.onerror=()=>res();
+    img.src=src;
+  })));
 }
 
 /* =========================
    BUILDERS
    ========================= */
 function buildStudyBlocks(order, listA, listB){
+  // ✅ FIXED: b_bg logic so AB = A/plain, B/complex; BA = A/complex, B/plain
   const a_bg = (order==='AB') ? 'plain'   : 'complex';
-  const b_bg = (order==='BA') ? 'complex' : 'plain';
+  const b_bg = (order==='AB') ? 'complex' : 'plain';
+
   const blockA = shuffle(listA.map(w=>({word:w, bgType:a_bg})));
   const blockB = shuffle(listB.map(w=>({word:w, bgType:b_bg})));
   return { blockA, blockB };
@@ -254,8 +262,9 @@ function buildStudyBlocks(order, listA, listB){
 
 function buildTestPool(order, listA, listB, lures){
   const map = new Map();
-  if(order==='AB'){ listA.forEach(w=>map.set(w,'plain')); listB.forEach(w=>map.set(w,'complex')); }
+  if(order==='AB'){ listA.forEach(w=>map.set(w,'plain'));  listB.forEach(w=>map.set(w,'complex')); }
   else            { listA.forEach(w=>map.set(w,'complex')); listB.forEach(w=>map.set(w,'plain'));  }
+
   const olds = [...listA, ...listB].map(w => ({ word:w, is_target:true,  study_bg: map.get(w) }));
   const news = lures.map(w => ({ word:w, is_target:false, study_bg:null }));
   return shuffle([...olds, ...news]);
